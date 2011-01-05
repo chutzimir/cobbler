@@ -286,6 +286,7 @@ echo "NETMASK=$netmask" >> $devfile
                 #else
                     ## Leave the interface unconfigured
                     ## we don't have enough info for static configuration
+sed -e '/^ONBOOT=/ s/yes$/no/' < $devfile > ${devfile}.tmp && mv ${devfile}.tmp $devfile
 echo "BOOTPROTO=none" >> $devfile
                 #end if
             #else
@@ -361,6 +362,16 @@ echo "nameserver $nameserver" >>/etc/resolv.conf
     #end if
 
 ## Move all staged files to their final location
+#raw
+cd /etc/sysconfig/network-scripts
+for iface in ifcfg-*; do
+    [ -f cobbler/$iface ] && continue
+    grep ^DEVICE $iface   >  cobbler/$iface
+    grep ^HWADDR $iface   >> cobbler/$iface
+    echo "ONBOOT=no"      >> cobbler/$iface
+    echo "BOOTPROTO=none" >> cobbler/$iface
+done
+#end raw
 rm -f /etc/sysconfig/network-scripts/ifcfg-*
 mv /etc/sysconfig/network-scripts/cobbler/* /etc/sysconfig/network-scripts/
 rm -r /etc/sysconfig/network-scripts/cobbler
